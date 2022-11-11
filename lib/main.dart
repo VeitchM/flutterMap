@@ -56,6 +56,14 @@ class _MapAppState extends State<MapApp> {
           FlutterMap(
             options: MapOptions(
               onTap: (x, p) async {
+                location = geoCode.reverseGeocoding(
+                    latitude: point.latitude, longitude: point.longitude);
+                location.then((value) => {
+                      setState(() {
+                        location = value;
+                        log("papa");
+                      })
+                    });
                 setState(() {
                   point = p;
                   log("papa");
@@ -103,7 +111,8 @@ class _MapAppState extends State<MapApp> {
                   Card(
                     child: Padding(
                       padding: EdgeInsets.all(16.0),
-                      child: Text("Puto el que lee",
+                      child: Text(
+                          "${location is Future<Address> ? "putoElQueLee" : location}",
                           style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   )
