@@ -48,30 +48,21 @@ class _MapAppState extends State<MapApp> {
   LatLng point = LatLng(-38, -57.55);
   var location;
   GeoCode geoCode = new GeoCode();
+  MapController mapController = new MapController();
 
   Widget build(BuildContext context) {
     return Stack(
         //
         children: [
           FlutterMap(
+            mapController: mapController,
             options: MapOptions(
-              onTap: (x, p) async {
-                location = geoCode.reverseGeocoding(
-                    latitude: point.latitude, longitude: point.longitude);
-                location.then((value) => {
-                      setState(() {
-                        location = value;
-                        log("papa");
-                      })
-                    });
+              onTap: (x, p) {
+                updateLocation();
                 setState(() {
                   point = p;
                   log("papa");
                 });
-
-                location = await geoCode.reverseGeocoding(
-                    latitude: point.latitude, longitude: point.longitude);
-                print(location);
               },
               center: point,
               zoom: 10.0,
@@ -106,18 +97,50 @@ class _MapAppState extends State<MapApp> {
                         hintText: "Search for Location",
                         contentPadding: EdgeInsets.all(16.0),
                       ),
+                      onSubmitted: (loc) async {
+                        var coordinates =
+                            geoCode.forwardGeocoding(address: loc);
+                        coordinates.then((coordinates) {
+                          print("Longitude: ${coordinates.longitude}");
+                          print("Latitude: ${coordinates.latitude}");
+                          point.latitude = coordinates.latitude as double;
+                          point.longitude = coordinates.longitude as double;
+                          updateLocation();
+                          centerMap();
+                        });
+                        setState(() {
+                          location = coordinates;
+                        });
+                      },
                     ),
                   ),
                   Card(
                     child: Padding(
                       padding: EdgeInsets.all(16.0),
                       child: Text(
-                          "${location is Future<Address> ? "putoElQueLee" : location}",
+                          "${location is Future ? "putoElQueLee" : location}",
                           style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   )
                 ]),
           )
         ]);
+  }
+
+  void updateLocation() {
+    location = geoCode.reverseGeocoding(
+        latitude: point.latitude, longitude: point.longitude);
+    location.then((value) => {
+          setState(() {
+            location = value;
+            log("papa");
+          })
+        });
+  }
+
+  void centerMap() {
+    setState(() {
+      mapController.move(point, 15);
+    });
   }
 }
